@@ -2,19 +2,43 @@ version: '3.6'
 
 services:
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile-api
+    container_name: api
+    environment:
+      AMQP_SERVER_URL: amqp://user:password@rabbitmq:5672/
+      REDIS_SERVER_URL: redis:6379
+    ports:
+      - 8080:8080
+    depends_on:
+      - rabbitmq
+      - redis
+  
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile-consumer
+    container_name: consumer
+    environment:
+      AMQP_SERVER_URL: amqp://user:password@rabbitmq:5672/
+      REDIS_SERVER_URL: redis:6379
+    depends_on:
+      - rabbitmq
+      - redis
+
+
   rabbitmq:
     image: rabbitmq:3.7-management
     container_name: rabbitmq
     hostname: rabbitmq
     ports:
       - "7000:15672"
-      - "7001:5672"
     environment:
       - RABBITMQ_DEFAULT_USER=user
       - RABBITMQ_DEFAULT_PASS=password
 
   redis:
     image: redis:5-alpine
-    ports:
-      - 6379:6379
     restart: always

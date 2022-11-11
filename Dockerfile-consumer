@@ -1,0 +1,12 @@
+FROM golang:1.19.3
+
+WORKDIR /go/src/app
+COPY . .
+
+RUN go get ./...
+
+COPY ./cmd/consumer ./
+
+RUN go build -o consumer .
+
+ENTRYPOINT ["./consumer"]
