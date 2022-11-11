@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+	cache.Init()
 	messaging.Init()
 	messaging.Client.Consume(
 		cache.ProcessMessage,

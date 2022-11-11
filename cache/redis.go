@@ -7,8 +7,11 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var Client	*redis.Client
+type Cache struct {
+	Cli	*redis.Client
+}
 
+var Client Cache
 
 func Init() {
 	redisURL := os.Getenv("REDIS_SERVER_URL")
@@ -17,18 +20,18 @@ func Init() {
 		Addr:     redisURL,
 		Password: "",
 	}
-	Client = redis.NewClient(options)
+	Client.Cli = redis.NewClient(options)
 }
 
-func Add(key string, value string) {
+func (c *Cache) Add(key string, value interface{}) {
 	ctx := context.TODO()
 
-	Client.Append(ctx, key, value).Result()
+	c.Cli.LPush(ctx, key, value).Result()
 }
 
-func Get(key string) []string {
+func (c *Cache) Get(key string) []string {
 	ctx := context.TODO()
 
-	messages, _ := Client.LRange(ctx, key, -1000, 1000).Result()
+	messages, _ := c.Cli.LRange(ctx, key, 0, -1).Result()
 	return messages
 }

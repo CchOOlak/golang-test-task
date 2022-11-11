@@ -43,7 +43,7 @@ func report(c *gin.Context) {
 		})
 	} else {
 		key := fmt.Sprintf("%s_%s", sender, receiver)
-		messages := cache.Get(key)
+		messages := cache.Client.Get(key)
 		c.JSON(http.StatusOK, gin.H{
 			"messages": messages,
 		})

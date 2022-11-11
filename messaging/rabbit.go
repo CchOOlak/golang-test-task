@@ -2,6 +2,7 @@ package messaging
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 
 	"github.com/streadway/amqp"
@@ -12,24 +13,28 @@ type RabbitClient struct {
 	Channel    *amqp.Channel
 }
 
-var Client *RabbitClient
+var Client RabbitClient
 
 const MessageQueue = "messages"
 
 func Init() {
 	// Define RabbitMQ server URL.
 	amqpServerURL := os.Getenv("AMQP_SERVER_URL")
+	log.Default().Printf("connecting to rabbit on %s ...\n", amqpServerURL)
 
 	// Create a new RabbitMQ connection.
 	connectRabbitMQ, err := amqp.Dial(amqpServerURL)
 	if err != nil {
+		log.Default().Println(err)
 		panic(err)
 	}
+	log.Default().Println("connected to rabbit successfully.")
 	Client.Connection = connectRabbitMQ
 
 	// Create channel
 	channelRabbitMQ, err := Client.Connection.Channel()
 	if err != nil {
+		log.Default().Println(err)
 		panic(err)
 	}
 	Client.Channel = channelRabbitMQ
@@ -44,6 +49,7 @@ func Init() {
 		nil,          // arguments
 	)
 	if err != nil {
+		log.Default().Println(err)
 		panic(err)
 	}
 }
@@ -75,6 +81,8 @@ func (c *RabbitClient) Produce(msg interface{}) error {
 }
 
 func (c *RabbitClient) Consume(processor func([]byte)) {
+	log.Default().Printf("starting consumer on queue %s", MessageQueue)
+
 	messages, err := c.Channel.Consume(
 		MessageQueue, // queue name
 		"",           // consumer
@@ -92,6 +100,7 @@ func (c *RabbitClient) Consume(processor func([]byte)) {
 
 	go func() {
 		for message := range messages {
+			log.Default().Printf("message %v received", message)
 			go processor(message.Body)
 		}
 	}()
